@@ -11,6 +11,7 @@ import (
 func NewServer(port int) *http.Server {
 	m := mux.NewRouter()
 	m.HandleFunc("/healthz", healthz).Methods("GET")
+	m.HandleFunc("/restart", restart).Methods("POST")
 
 	s := http.Server{
 		Addr:    fmt.Sprintf(":%d", port),
@@ -22,9 +23,4 @@ func NewServer(port int) *http.Server {
 	}
 
 	return &s
-}
-
-func healthz(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("OK 👍🏼"))
 }
