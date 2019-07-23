@@ -1,9 +1,11 @@
 package main
 
 import (
-
-	// appsAPI "k8s.io/api/apps/v1"
+	"fmt"
 	"log"
+
+	appsAPI "k8s.io/api/apps/v1"
+	metaAPI "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	k8s "k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
@@ -33,4 +35,26 @@ func loadConfig(path string) *rest.Config {
 	}
 
 	return config
+}
+
+// GetDeployment returns the deployment for the host
+func GetDeployment(host string) (*appsAPI.Deployment, error) {
+	deps, err := k8sClient.AppsV1().Deployments("").List(
+		metaAPI.ListOptions{
+			LabelSelector: fmt.Sprintf("host=%s", host),
+		},
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed listing deployments: %s", err)
+	}
+
+	count := len(deps.Items)
+	switch count {
+	case 0:
+		return nil, nil
+	case 1:
+		return &deps.Items[0], nil
+	default:
+		return nil, fmt.Errorf("expected 1 or no deployments with host label, found %d", count)
+	}
 }

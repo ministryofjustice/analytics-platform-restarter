@@ -34,6 +34,30 @@ func restart(w http.ResponseWriter, r *http.Request) {
 
 	logger.Printf("%s: restart request received. Reason: '%s'", req.Host, req.Reason)
 
+	deployment, err := GetDeployment(req.Host)
+	if err != nil {
+		logger.Printf("%s: failed to get deployment: %s", req.Host, err)
+		writeJSONResponse(
+			w,
+			http.StatusInternalServerError,
+			"error",
+			fmt.Sprintf("failed to get app with given host"),
+		)
+		return
+	}
+	if deployment == nil {
+		logger.Printf("%s: deployment not found.", req.Host)
+		writeJSONResponse(
+			w,
+			http.StatusNotFound,
+			"error",
+			fmt.Sprintf("app with given host not found"),
+		)
+		return
+	}
+
+	logger.Print(deployment)
+
 	writeJSONResponse(w, http.StatusNotImplemented, "error", "TODO ⚠️")
 }
 
