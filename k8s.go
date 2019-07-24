@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"log"
 
@@ -11,6 +12,17 @@ import (
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 )
+
+type ErrK8s struct {
+	Err error
+}
+
+func (e ErrK8s) Error() string {
+	return e.Err.Error()
+}
+
+type ErrTooManyDeployments struct {
+}
 
 // KubernetesClient constructs a new Kubernetes client
 func KubernetesClient(path string) k8s.Interface {
@@ -38,23 +50,27 @@ func loadConfig(path string) *rest.Config {
 }
 
 // GetDeployment returns the deployment for the host
-func GetDeployment(host string) (*appsAPI.Deployment, error) {
-	deps, err := k8sClient.AppsV1().Deployments("").List(
+func GetDeployment(host string) (deploy *appsAPI.Deployment, err error) {
+	deploys, err := k8sClient.AppsV1().Deployments("").List(
 		metaAPI.ListOptions{
 			LabelSelector: fmt.Sprintf("host=%s", host),
 		},
 	)
 	if err != nil {
-		return nil, fmt.Errorf("failed listing deployments: %s", err)
+		return nil, Error{Type: K8sError, Err: err}
 	}
 
-	count := len(deps.Items)
+	count := len(deploys.Items)
 	switch count {
-	case 0:
-		return nil, nil
 	case 1:
-		return &deps.Items[0], nil
-	default:
-		return nil, fmt.Errorf("expected 1 or no deployments with host label, found %d", count)
+		return &deploys.Items[0], nil
+	case 0:
+		return nil, Error{Type: NoDeploymentError, Err: fmt.Errorf("No deployment with host '%s' found", host)}
+	default: // >1
+		return nil, Error{Type: TooManyDeploymentsError, Err: fmt.Errorf("expected exactly 1 Deployment with host label = '%s', found %d", host, count)}
 	}
+}
+
+func SetRestartAnnotations(deploy *appsAPI.Deployment) error {
+	return errors.New("TODO: Implement me")
 }
