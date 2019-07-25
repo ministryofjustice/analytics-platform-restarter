@@ -80,7 +80,8 @@ func restart(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	writeJSONResponse(w, http.StatusNotImplemented, "error", "TODO ⚠️")
+	logger.Printf("%s: pods restarted", req.Host)
+	writeJSONResponse(w, http.StatusOK, "message", "Restarted.")
 }
 
 // Process restart the requested app with the given host and reason
@@ -92,5 +93,5 @@ func (r *RestartRequest) Process() error {
 
 	logger.Printf("%s: Deployment '%s' found.", r.Host, deploy.Name)
 
-	return nil
+	return RestartPods(deploy, r.Reason)
 }

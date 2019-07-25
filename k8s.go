@@ -1,28 +1,18 @@
 package main
 
 import (
-	"errors"
 	"fmt"
 	"log"
+	"time"
 
 	appsAPI "k8s.io/api/apps/v1"
 	metaAPI "k8s.io/apimachinery/pkg/apis/meta/v1"
 
+	"k8s.io/apimachinery/pkg/types"
 	k8s "k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 )
-
-type ErrK8s struct {
-	Err error
-}
-
-func (e ErrK8s) Error() string {
-	return e.Err.Error()
-}
-
-type ErrTooManyDeployments struct {
-}
 
 // KubernetesClient constructs a new Kubernetes client
 func KubernetesClient(path string) k8s.Interface {
@@ -50,7 +40,7 @@ func loadConfig(path string) *rest.Config {
 }
 
 // GetDeployment returns the deployment for the host
-func GetDeployment(host string) (deploy *appsAPI.Deployment, err error) {
+func GetDeployment(host string) (*appsAPI.Deployment, error) {
 	deploys, err := k8sClient.AppsV1().Deployments("").List(
 		metaAPI.ListOptions{
 			LabelSelector: fmt.Sprintf("host=%s", host),
@@ -71,6 +61,47 @@ func GetDeployment(host string) (deploy *appsAPI.Deployment, err error) {
 	}
 }
 
-func SetRestartAnnotations(deploy *appsAPI.Deployment) error {
-	return errors.New("TODO: Implement me")
+// RestartPods restarts the Deployment's Pods
+//
+// This is achived by patching the Deployment and adding/updating the
+// restartedAt/restartReason annotations of its Pods' template.
+//
+// These annotations are also set in the Deployment.
+func RestartPods(d *appsAPI.Deployment, reason string) error {
+	annotations := fmt.Sprintf(`
+	    "annotations": {
+			"restartedAt": "%s",
+			"restartReason": "%s"
+		}`,
+		time.Now().UTC().Format(time.RFC3339),
+		reason,
+	)
+
+	// the annotations are set both for the Deployment and for the pod
+	// template (which will ultimately trigger the restart)
+	patch := fmt.Sprintf(`{
+			"metadata": {
+				%s
+			},
+			"spec": {
+				"template": {
+					"metadata": {
+						%s
+					}
+				}
+			}
+		}`,
+		annotations,
+		annotations,
+	)
+
+	_, err := k8sClient.AppsV1().Deployments(d.Namespace).Patch(
+		d.Name,
+		types.StrategicMergePatchType,
+		[]byte(patch),
+	)
+	if err != nil {
+		return Error{Type: K8sError, Err: err}
+	}
+	return nil
 }
