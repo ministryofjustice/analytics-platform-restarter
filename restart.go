@@ -86,7 +86,7 @@ func restart(w http.ResponseWriter, r *http.Request) {
 
 // Process restart the requested app with the given host and reason
 func (r *RestartRequest) Process() error {
-	deploy, err := GetDeployment(r.Host)
+	deploy, err := GetDeployment(r.Host, namespace)
 	if err != nil {
 		return err
 	}

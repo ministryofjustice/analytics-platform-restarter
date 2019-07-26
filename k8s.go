@@ -40,8 +40,8 @@ func loadConfig(path string) *rest.Config {
 }
 
 // GetDeployment returns the deployment for the host
-func GetDeployment(host string) (*appsAPI.Deployment, error) {
-	deploys, err := k8sClient.AppsV1().Deployments("").List(
+func GetDeployment(host, ns string) (*appsAPI.Deployment, error) {
+	deploys, err := k8sClient.AppsV1().Deployments(ns).List(
 		metaAPI.ListOptions{
 			LabelSelector: fmt.Sprintf("host=%s", host),
 		},

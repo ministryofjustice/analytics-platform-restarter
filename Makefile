@@ -1,5 +1,6 @@
 PROJECTNAME := restarter
 PORT := 8000
+NS := apps-prod
 GO := CGO_ENABLED=0 go
 
 
@@ -20,7 +21,7 @@ docker-image:
 ## docker-run: Run in docker.
 docker-run: docker-image
 	@echo " > Running Docker container..."
-	docker run -e PORT="${PORT}" -v ${HOME}/.kube:/.kube -p ${PORT}:${PORT} "${PROJECTNAME}"
+	docker run -e NAMESPACE="${NS}" -e PORT="${PORT}" -v ${HOME}/.kube:/.kube -p ${PORT}:${PORT} "${PROJECTNAME}"
 
 ## static: Build static binary.
 static:

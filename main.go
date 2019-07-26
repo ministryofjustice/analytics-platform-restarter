@@ -14,6 +14,7 @@ const defaultPort = 8000
 var (
 	logger    *log.Logger
 	port      int
+	namespace string
 	home      string
 	k8sClient k8s.Interface
 )
@@ -21,8 +22,7 @@ var (
 func init() {
 	logger = log.New(os.Stdout, "", log.Ldate|log.Lmicroseconds|log.LUTC|log.Lshortfile)
 
-	port = getPort()
-	home = getHome()
+	readConfig()
 
 	k8sClient = KubernetesClient(filepath.Join(home, ".kube", "config"))
 }
@@ -33,6 +33,20 @@ func main() {
 	err := server.ListenAndServe()
 	if err != nil {
 		logger.Fatalf("🔻 Server shut down: %s", err)
+	}
+}
+
+func readConfig() {
+	port = getPort()
+
+	namespace = os.Getenv("NAMESPACE")
+	if namespace == "" {
+		logger.Fatalf("💥 $NAMESPACE not set or blank.")
+	}
+
+	home = os.Getenv("HOME")
+	if home == "" {
+		logger.Fatalf("💥 $HOME not set or blank.")
 	}
 }
 
@@ -55,13 +69,4 @@ func getPort() int {
 	}
 
 	return port
-}
-
-func getHome() string {
-	home, ok := os.LookupEnv("HOME")
-	if !ok {
-		logger.Fatalf("💥 $HOME not set. It couldn't determine HOME directory.")
-	}
-
-	return home
 }

@@ -4,6 +4,9 @@ Restart applications.
 It provides an HTTP API to trigger the restart of the pods of a given
 application (based on the host).
 
+The service will only find/restart applications running in the
+given `$NAMESPACE`.
+
 **IMPORTANT**: This is an internal service, don't expose this on the internet.
 
 ## Usage
@@ -39,7 +42,9 @@ The application doesn't require any configuration to work.
 
 | Env variable         | Default |  Details |
 | -------------------- | ------- | -------- |
+| `NAMESPACE`          |         | namespace where the apps to restart run (required). |
 | `PORT`               | `8000`  | port on which the server listen to |
+
 
 **NOTE**: The server will try to load the kubernetes configuration from
 in-cluster first (this is the case when running the server within a k8s
