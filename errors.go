@@ -17,7 +17,7 @@ const (
 // Error wraps another error and has a "Type" field to allow more granular
 // handling
 type Error struct {
-	Type int
+	Code int
 	Err  error
 }
 

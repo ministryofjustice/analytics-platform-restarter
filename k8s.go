@@ -47,7 +47,7 @@ func GetDeployment(host string) (*appsAPI.Deployment, error) {
 		},
 	)
 	if err != nil {
-		return nil, Error{Type: K8sError, Err: err}
+		return nil, Error{Code: K8sError, Err: err}
 	}
 
 	count := len(deploys.Items)
@@ -55,9 +55,9 @@ func GetDeployment(host string) (*appsAPI.Deployment, error) {
 	case 1:
 		return &deploys.Items[0], nil
 	case 0:
-		return nil, Error{Type: NoDeploymentError, Err: fmt.Errorf("No deployment with host '%s' found", host)}
+		return nil, Error{Code: NoDeploymentError, Err: fmt.Errorf("No deployment with host '%s' found", host)}
 	default: // >1
-		return nil, Error{Type: TooManyDeploymentsError, Err: fmt.Errorf("expected exactly 1 Deployment with host label = '%s', found %d", host, count)}
+		return nil, Error{Code: TooManyDeploymentsError, Err: fmt.Errorf("expected exactly 1 Deployment with host label = '%s', found %d", host, count)}
 	}
 }
 
@@ -101,7 +101,7 @@ func RestartPods(d *appsAPI.Deployment, reason string) error {
 		[]byte(patch),
 	)
 	if err != nil {
-		return Error{Type: K8sError, Err: err}
+		return Error{Code: K8sError, Err: err}
 	}
 	return nil
 }

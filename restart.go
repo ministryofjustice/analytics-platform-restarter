@@ -22,11 +22,11 @@ func NewFromReader(r io.Reader) (*RestartRequest, error) {
 	req := &RestartRequest{}
 	err := json.NewDecoder(r).Decode(&req)
 	if err != nil {
-		return req, Error{Type: DecodeError, Err: err}
+		return req, Error{Code: DecodeError, Err: err}
 	}
 
 	if req.Host == "" {
-		return req, Error{Type: BlankHostError, Err: errors.New("invalid request: 'host' can't be blank")}
+		return req, Error{Code: BlankHostError, Err: errors.New("invalid request: 'host' can't be blank")}
 	}
 	if req.Reason == "" {
 		req.Reason = defaultReason
@@ -43,7 +43,7 @@ func NewFromReader(r io.Reader) (*RestartRequest, error) {
 func restart(w http.ResponseWriter, r *http.Request) {
 	req, err := NewFromReader(r.Body)
 	if err != nil {
-		switch err.(Error).Type {
+		switch err.(Error).Code {
 		case DecodeError:
 			logger.Printf("failed to decode request body: %s", err)
 			writeJSONResponse(w, http.StatusBadRequest, "error", "Failed to decode request body: Invalid JSON.")
@@ -64,7 +64,7 @@ func restart(w http.ResponseWriter, r *http.Request) {
 
 	err = req.Process()
 	if err != nil {
-		switch err.(Error).Type {
+		switch err.(Error).Code {
 		case K8sError:
 			logger.Printf("%s: request to k8s failed: %s", req.Host, err)
 			writeJSONResponse(w, http.StatusInternalServerError, "error", "Error while trying to restart application.")
