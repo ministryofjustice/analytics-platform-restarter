@@ -1,3 +1,5 @@
+[![Docker Repository on Quay](https://quay.io/repository/mojanalytics/restarter/status "Docker Repository on Quay")](https://quay.io/repository/mojanalytics/restarter)
+
 # restarter
 Restart applications.
 
