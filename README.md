@@ -1,52 +1,57 @@
+# Restarter
+
 [![Docker Repository on Quay](https://quay.io/repository/mojanalytics/restarter/status "Docker Repository on Quay")](https://quay.io/repository/mojanalytics/restarter)
 
-# restarter
 Restart applications.
 
-It provides an HTTP API to trigger the restart of the pods of a given
-application (based on the host).
+It provides an HTTP API to trigger the restart of the pods of a given application (based on the host).
 
-The service will only find/restart applications running in the
-given `$NAMESPACE`.
+The service will only find/restart applications running in the given `$NAMESPACE`.
 
 **IMPORTANT**: This is an internal service, don't expose this on the internet.
 
+## Builds
+
+The docker image is built and hosted on [Quay.io](https://quay.io/repository/mojanalytics/restarter)
+
 ## Usage
 
-A Makefile is provided to enable easily building, testing and running
-of the service.
+A Makefile is provided to enable easily building, testing and running of the service.
 
 ### `make help`
+
 Show list of available "commands" (targets)
 
 ### `make run`
-Compiles and runs the service on `http://localhost:8080` (or the
-specified `$PORT`)
 
-**NOTE**: This will mount your `~/.kube/config` file so the running container
-will use your current k8s context/credentials.
+Compiles and runs the service on `http://localhost:8080` (or the specified `$PORT`)
+
+**NOTE**: This will mount your `~/.kube/config` file so the running container will use your current k8s context/credentials.
 
 ### `make test`
+
 Compiles the test code and runs it
 
 ### `make static` (default)
+
 Statically compile the service binary.
 
 ### `make docker-image`
+
 Builds a docker image as defined in Dockerfile
 
 ### `make docker-run`
+
 Builds and runs the service in a docker container
 
-
 ## Configuration
+
 The application doesn't require any configuration to work.
 
-| Env variable         | Default |  Details |
-| -------------------- | ------- | -------- |
-| `NAMESPACE`          |         | namespace where the apps to restart run (required). |
-| `PORT`               | `8000`  | port on which the server listen to |
-
+| Env variable | Default | Details                                             |
+| ------------ | ------- | --------------------------------------------------- |
+| `NAMESPACE`  |         | namespace where the apps to restart run (required). |
+| `PORT`       | `8000`  | port on which the server listen to                  |
 
 **NOTE**: The server will try to load the kubernetes configuration from
 in-cluster first (this is the case when running the server within a k8s
@@ -54,13 +59,11 @@ cluster) and fallback to load it from `$HOME/.kube/config` when this fails.
 
 If that fails as well the server will not start.
 
-
 ### Endpoints
 
 #### `POST /restart`
 
-Restarts the application with the given host.
-Restart requests have to have the following JSON format:
+Restarts the application with the given host. Restart requests have to have the following JSON format:
 
 ```json
 {
@@ -82,6 +85,7 @@ and to its pods's template (with the current time and the given reason):
 ```
 
 ##### Example
+
 ```bash
 $ curl -v -XPOST --data '{"host": "example.com", "reason": "My dog ate my homework"}' 127.0.0.1:8000/restart
 *   Trying 127.0.0.1...
@@ -104,11 +108,11 @@ $ curl -v -XPOST --data '{"host": "example.com", "reason": "My dog ate my homewo
 ```
 
 ### `GET /healthz` (healthcheck)
-This will respond with a `200 OK` and a small body.
-It's used by kubernetes (or whatever) to check that the server is still
-responding.
 
-#### Example
+This will respond with a `200 OK` and a small body. It's used to check that the server is still responding.
+
+#### healthz Example
+
 ```bash
 $ curl -v -XGET 127.0.0.1:8000/healthz
 *   Trying 127.0.0.1...
@@ -127,36 +131,39 @@ $ curl -v -XGET 127.0.0.1:8000/healthz
 {"message":"OK 👍🏼"}
 ```
 
-
 ## Dependencies
 
 Dependencies are managed using [Go Modules](https://github.com/golang/go/wiki/Modules).
 
 Dependences are vendored in the `/vendor` which is checked in Git.
 
-
 ### Add a new dependency
 
-1. `$ go get foo/bar`
-2. Edit your code to import foo/bar
+- `$ go get foo/bar`
+- Edit your code to import foo/bar
 
 ### Upgrade a dependency
 
 As per instructions [here](https://github.com/golang/go/wiki/Modules#how-to-upgrade-and-downgrade-dependencies)
 
-1. `$ go get foo/bar`
+```bash
+go get foo/bar
+```
 
 This will upgrade to the latest version of `foo/bar` with a semver tag.
+
 Alternatively, `go get foo/bar@v1.2.3` will get a specific version.
 
 ## Docker image
+
 The [`Dockerfile`](/) uses 2 stages one for building and the final image.
 
 ### builder stage
 
 ### final stage
+
 The actual image running the service is just scratch with the binary compiled
 statically (`-ldflags '-extldflags "-static"'`) to keep the docker image to the
 bare minimum.
 
-See this article on containerising Go application: https://www.cloudreach.com/blog/containerize-this-golang-dockerfiles/
+[See this article on containerising Go applications](https://www.cloudreach.com/blog/containerize-this-golang-dockerfiles/)
